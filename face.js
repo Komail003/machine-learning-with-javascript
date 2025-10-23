@@ -1,0 +1,51 @@
+let video;
+let facemesh;
+let predictions = [];
+
+function setup() {
+  createCanvas(640, 480);
+  video = createCapture(VIDEO);
+  video.size(640, 480);
+  video.hide();
+
+  // ✅ Load FaceMesh model
+  facemesh = ml5.facemesh(video, () => console.log("FaceMesh model ready!"));
+
+  // ✅ Listen for predictions
+  facemesh.on("predict", (results) => (predictions = results));
+}
+
+function draw() {
+  image(video, 0, 0, width, height);
+
+  if (predictions.length > 0) {
+    const keypoints = predictions[0].scaledMesh;
+
+    // 🔵 Draw blue dots for facial landmarks
+    noStroke();
+    fill(0, 150, 255);
+    for (let i = 0; i < keypoints.length; i++) {
+      const [x, y] = keypoints[i];
+      ellipse(x, y, 3, 3);
+    }
+
+    // 🔴 Draw red bounding box around the detected face
+    let xs = keypoints.map((p) => p[0]);
+    let ys = keypoints.map((p) => p[1]);
+    let minX = Math.min(...xs);
+    let maxX = Math.max(...xs);
+    let minY = Math.min(...ys);
+    let maxY = Math.max(...ys);
+
+    stroke(255, 0, 0);
+    strokeWeight(5);
+    noFill();
+    rect(minX - 10, minY - 10, maxX - minX + 20, maxY - minY + 20);
+
+    // 🧠 Optional: show number of points detected
+    noStroke();
+    fill(255);
+    textSize(16);
+    text(`Points: ${keypoints.length}`, 10, height - 10);
+  }
+}

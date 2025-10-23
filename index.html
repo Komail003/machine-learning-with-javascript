@@ -2,103 +2,34 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Hand Gesture Learner</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ml5@0.12.2/dist/ml5.min.js"></script>
+    <link rel="icon" href="data:," />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D Hand Mirror</title>
+    <style>
+      body {
+        overflow: hidden;
+      }
+      #video {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      
+    </style>
   </head>
-  <body>
-    <script>
-      let video;
-      let handpose;
-      let predictions = [];
-      let knn;
-      let currentLabel = "";
-      let gestureMeaning = "";
 
-      // 🧠 Define meanings for gestures
-      const gestureMap = {
-        a: "👋 Hello / Wave",
-        b: "👍 Thumbs Up",
-        c: "✊ Fist / Stop",
-        d: "✌️ Peace",
-        e: "🤘 Rock On",
-      };
+  <body style="margin: 0; background: black; overflow: hidden">
+    <!-- ✅ Load libraries in this exact order -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
+    <script src="https://unpkg.com/three@0.148.0/build/three.min.js"></script>
 
-      function setup() {
-        createCanvas(640, 480);
-        video = createCapture(VIDEO);
-        video.size(640, 480);
-        video.hide();
+    <!-- ✅ Your script should come last -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.2/p5.min.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/ml5@0.12.2/dist/ml5.min.js"></script> -->
 
-        // ✅ Initialize handpose model
-        handpose = ml5.handpose(video, () =>
-          console.log("Handpose model ready!")
-        );
-        handpose.on("predict", (results) => (predictions = results));
-
-        // ✅ Initialize KNN Classifier
-        knn = ml5.KNNClassifier();
-      }
-
-      function draw() {
-        image(video, 0, 0, width, height);
-
-        if (predictions.length > 0) {
-          const landmarks = predictions[0].landmarks;
-
-          // Draw green dots for landmarks
-          for (let i = 0; i < landmarks.length; i++) {
-            const [x, y] = landmarks[i];
-            fill(0, 255, 0);
-            noStroke();
-            ellipse(x, y, 10, 10);
-          }
-
-          // ✅ Draw a red bounding box around the hand
-          let xs = landmarks.map((p) => p[0]);
-          let ys = landmarks.map((p) => p[1]);
-          let minX = Math.min(...xs);
-          let maxX = Math.max(...xs);
-          let minY = Math.min(...ys);
-          let maxY = Math.max(...ys);
-
-          stroke(255, 0, 0);
-          strokeWeight(6);
-          noFill();
-          rect(minX - 10, minY - 10, maxX - minX + 20, maxY - minY + 20);
-        }
-
-        // 🧠 Show current label and meaning
-        noStroke();
-        fill(255);
-        textSize(32);
-        text(currentLabel.toUpperCase(), 10, 50);
-        textSize(24);
-        text(gestureMeaning, 10, 90);
-      }
-
-      // 👆 Press any key (a, b, c, etc.) to add a training example
-      function keyPressed() {
-        if (predictions.length > 0) {
-          const landmarks = predictions[0].landmarks.flat();
-          knn.addExample(landmarks, key);
-          console.log(`Added example for label: ${key}`);
-        }
-      }
-
-      // 👆 Click mouse to classify the current hand position
-      function mousePressed() {
-        if (predictions.length > 0) {
-          const landmarks = predictions[0].landmarks.flat();
-          knn.classify(landmarks, (err, result) => {
-            if (result && result.label) {
-              currentLabel = result.label;
-              gestureMeaning = gestureMap[result.label] || "Unknown Gesture";
-              console.log(`Predicted: ${currentLabel} (${gestureMeaning})`);
-            }
-          });
-        }
-      }
-    </script>
+    <script src="logic.js"></script>
   </body>
 </html>
